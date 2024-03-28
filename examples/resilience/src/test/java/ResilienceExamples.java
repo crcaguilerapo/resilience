@@ -79,10 +79,10 @@ public class ResilienceExamples {
         retry.executeRunnable(() -> {
             var response = Try.of(() -> client.newCall(request).execute()).get();
             if (response.code() == 500) {
-                System.out.println("Wrong");
+                System.out.println("Failed");
                 throw new RuntimeException();
             } else {
-                System.out.println("Good");
+                System.out.println("Successful");
             }
         });
     }
@@ -141,7 +141,7 @@ public class ResilienceExamples {
                 if (available.get()) {
                     if (counter.get() == 0) {
                         start.set(System.nanoTime());
-                    } else if (counter.get() > requestCount) {
+                    } else if (counter.get() >= requestCount) {
                         double elapsed = System.nanoTime() - start.get();
                         double elapsedSeconds = elapsed / 1_000_000_000;
 
@@ -206,7 +206,7 @@ public class ResilienceExamples {
         for (int i = 0; i < 20; i++) {
             try {
                 restrictedRunnable.run();
-                System.out.println("Good");
+                System.out.println("Successful");
             } catch (Exception e) {
                 System.out.println(e.getMessage());
             }
@@ -216,7 +216,7 @@ public class ResilienceExamples {
 
     @Test
     void circuitBreakerExample() {
-        server.setDispatcher(simulator(5, 1, 10, 1));
+        server.setDispatcher(simulator(5, 1, 10, 2));
 
         OkHttpClient client = new OkHttpClient();
         Request request = new Request.Builder()
@@ -226,9 +226,9 @@ public class ResilienceExamples {
         CircuitBreakerConfig circuitBreakerConfig = CircuitBreakerConfig
                 .custom()
                 .slidingWindowType(COUNT_BASED)
-                .slidingWindowSize(6)
+                .slidingWindowSize(10)
                 .failureRateThreshold(50.0f)
-                .waitDurationInOpenState(Duration.ofSeconds(2))
+                .waitDurationInOpenState(Duration.ofSeconds(1))
                 .permittedNumberOfCallsInHalfOpenState(2)
                 .build();
 
@@ -253,7 +253,7 @@ public class ResilienceExamples {
         for (int i = 0; i < 20; i++) {
             try {
                 restrictedRunnable.run();
-                System.out.println("Good");
+                System.out.println("Successful");
             } catch (Exception e) {
                 System.out.println(e.getMessage());
             }
@@ -294,7 +294,7 @@ public class ResilienceExamples {
             var thread = new Thread(() -> {
                 try {
                     restrictedRunnable.run();
-                    System.out.println("Good");
+                    System.out.println("Successful");
                 } catch (Exception e) {
                     System.out.println(e.getMessage());
                 }
@@ -315,7 +315,7 @@ public class ResilienceExamples {
     }
 
     @Test
-    void bulkheadWithThreadPoolExample(){
+    void bulkheadWithThreadPoolExample() {
         server.setDispatcher(simulator(5, 1, 5, 1));
 
         OkHttpClient client = new OkHttpClient();
@@ -352,7 +352,7 @@ public class ResilienceExamples {
             var thread = new Thread(() -> {
                 try {
                     restrictedRunnable.get();
-                    System.out.println("Good");
+                    System.out.println("Successful");
                 } catch (Exception e) {
                     System.out.println(e.getMessage());
                 }
